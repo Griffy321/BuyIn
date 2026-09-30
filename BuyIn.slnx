@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BuyIn.Api/BuyIn.Api.csproj" />
+    <Project Path="src/BuyIn.Client/BuyIn.Client.csproj" />
+    <Project Path="src/BuyIn.Core/BuyIn.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BuyIn.Api.Tests/BuyIn.Api.Tests.csproj" />
+    <Project Path="tests/BuyIn.Core.Tests/BuyIn.Core.Tests.csproj" />
+  </Folder>
+</Solution>
