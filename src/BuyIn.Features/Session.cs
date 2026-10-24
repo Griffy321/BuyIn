@@ -1,8 +1,8 @@
 namespace BuyIn.Features.Session
 {
-    using BuyIn.Features.Player;
+    using BuyIn.Features.SessionPlayer;
 
-    public class Session : Player
+    public class Session 
     {
         
     }

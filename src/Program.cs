@@ -11,8 +11,8 @@ namespace BuyIn
             // string? name = Console.ReadLine();
             // player.SetPlayer(name);
             // player.Showplayer();
-            Player player = new Player();
-            player.BuildPlayer("hello", "world");    
+            Player player = new Player("hello", "world");
+            Console.WriteLine(player.playerId);
         }
     }
 }

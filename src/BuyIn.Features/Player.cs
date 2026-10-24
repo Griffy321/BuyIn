@@ -6,49 +6,40 @@ namespace BuyIn.Features.Player
 
     public class Player
     {
-        private string? playerFirstName;
-        private string? playerLastName;
-        private string playerId;
+        public string playerFirstName 
+        {
+            get {return field;} 
+            init;
+        }
+        public string playerLastName 
+        {
+            get {return field;} 
+            init;
+        }
+        public string playerId 
+        {
+            get {return field;} 
+            init;
+        } = RandomString.GenerateUID();
 
-        /* Player name */
-        public void SetPlayer(string firstName, string lastName)
+        public Player(string firstName, string lastName)
         {
             if (String.IsNullOrWhiteSpace(firstName))
             {
-                playerFirstName = "";
+                this.playerFirstName = "";
             }
             else 
             {
-                playerFirstName = firstName;
+                this.playerFirstName = firstName;
             }
             if (String.IsNullOrWhiteSpace(lastName))
             {
-                playerLastName = "";
+                this.playerLastName = "";
             }
             else 
             {
-                playerLastName = lastName;
+                this.playerLastName = lastName;
             }
-        }
-        public string Showplayer()
-        {
-            if (String.IsNullOrEmpty(playerFirstName))
-            {
-                return "No player to show.";
-            }
-            else 
-            {
-                return playerFirstName + " " + playerLastName;
-            }
-        }
-
-        /* Build the player (call all the methods) */
-        public bool BuildPlayer(string firstName, string lastName)
-        {
-            SetPlayer(firstName, lastName);
-            playerId = RandomString.GenerateUID();
-            // add logic to make sure player id is set  
-            return true;
         }
     }
 }
