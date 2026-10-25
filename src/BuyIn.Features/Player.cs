@@ -3,6 +3,7 @@ namespace BuyIn.Features.Player
     using System.Reflection.Metadata.Ecma335;
 
     using BuyIn.Tools.RandomStr;
+    using BuyIn.Tools.Log;
 
     public class Player
     {
@@ -27,6 +28,7 @@ namespace BuyIn.Features.Player
             if (String.IsNullOrWhiteSpace(firstName))
             {
                 this.playerFirstName = "";
+                Logger.Warn(body: "Player created with a blank first name", resource: nameof(Player), attributes: new() { ["playerId"] = playerId });
             }
             else 
             {
@@ -35,11 +37,13 @@ namespace BuyIn.Features.Player
             if (String.IsNullOrWhiteSpace(lastName))
             {
                 this.playerLastName = "";
+                Logger.Warn(body: "Player created with a blank last name", resource: nameof(Player), attributes: new() { ["playerId"] = playerId });
             }
-            else 
+            else
             {
                 this.playerLastName = lastName;
             }
+            Logger.Info(body: "Player created", resource: nameof(Player), attributes: new() { ["playerId"] = playerId });
         }
     }
 }
