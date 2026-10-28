@@ -1,4 +1,5 @@
-namespace BuyIn.Tools.Log {
+namespace BuyIn.Tools.Log 
+{
 
     using System.Text.Json;
     using BuyIn.Tools.RandomStr;
