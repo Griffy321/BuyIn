@@ -1,5 +1,6 @@
 using BuyIn.Features.Player;
 using BuyIn.Tools.Log;
+using BuyIn.Data.Config;
 
 namespace BuyIn
 {
@@ -7,11 +8,6 @@ namespace BuyIn
     {
         public static void Main(string[] args)
         {
-            // Player player = new Player();
-            // Console.WriteLine("Enter a name");
-            // string? name = Console.ReadLine();
-            // player.SetPlayer(name);
-            // player.Showplayer();
             Logger.Info(body: "App opened", resource: nameof(RunProgram));
             try
             {
