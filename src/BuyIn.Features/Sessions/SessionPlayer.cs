@@ -4,12 +4,12 @@ namespace BuyIn.Features.SessionPlayer
     
     class SessionPlayer
     {
-        private List<decimal> buyins;
-        private Decimal cashOut;
-        private string status;
-        private bool isSettled;
-        private DateTime joinedAt = new DateTime();
-        private DateTime leftAt = new DateTime();
+        private List<decimal> _buyins;
+        private Decimal _cashOut;
+        private string _status;
+        private bool _isSettled;
+        private DateTime _joinedAt = new DateTime();
+        private DateTime _leftAt = new DateTime();
 
         // public DateTime SetJoinedAt(string playerId)
         // {

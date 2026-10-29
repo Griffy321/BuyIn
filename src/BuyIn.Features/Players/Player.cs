@@ -7,17 +7,17 @@ namespace BuyIn.Features.Player
 
     public class Player
     {
-        public string playerFirstName 
+        public string PlayerFirstName 
         {
             get {return field;} 
             init;
         }
-        public string playerLastName 
+        public string PlayerLastName 
         {
             get {return field;} 
             init;
         }
-        public string playerId 
+        public string PlayerId 
         {
             get {return field;} 
             init;
@@ -27,23 +27,23 @@ namespace BuyIn.Features.Player
         {
             if (String.IsNullOrWhiteSpace(firstName))
             {
-                this.playerFirstName = "";
-                Logger.Warn(body: "Player created with a blank first name", resource: nameof(Player), attributes: new() { ["playerId"] = playerId });
+                this.PlayerFirstName = "";
+                Logger.Warn(body: "Player created with a blank first name", resource: nameof(Player), attributes: new() { ["playerId"] = PlayerId });
             }
             else 
             {
-                this.playerFirstName = firstName;
+                this.PlayerFirstName = firstName;
             }
             if (String.IsNullOrWhiteSpace(lastName))
             {
-                this.playerLastName = "";
-                Logger.Warn(body: "Player created with a blank last name", resource: nameof(Player), attributes: new() { ["playerId"] = playerId });
+                this.PlayerLastName = "";
+                Logger.Warn(body: "Player created with a blank last name", resource: nameof(Player), attributes: new() { ["playerId"] = PlayerId });
             }
             else
             {
-                this.playerLastName = lastName;
+                this.PlayerLastName = lastName;
             }
-            Logger.Info(body: "Player created", resource: nameof(Player), attributes: new() { ["playerId"] = playerId });
+            Logger.Info(body: "Player created", resource: nameof(Player), attributes: new() { ["playerId"] = PlayerId });
         }
     }
 }

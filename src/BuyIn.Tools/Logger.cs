@@ -5,7 +5,7 @@ namespace BuyIn.Tools.Log
     using BuyIn.Tools.RandomStr;
     public static class Logger
     {
-        private static readonly string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BuyInLogs.txt");
+        private static readonly string _filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BuyInLogs.txt");
 
         public static void Info(string body, string? resource = null, Dictionary<string, object?>? attributes = null, Exception? exception = null)
         {
@@ -36,7 +36,7 @@ namespace BuyIn.Tools.Log
             try
             {
                 string json = JsonSerializer.Serialize(log);
-                File.AppendAllText(filePath, json + Environment.NewLine);
+                File.AppendAllText(_filePath, json + Environment.NewLine);
             }
             catch (Exception ex)
             {

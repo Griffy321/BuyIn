@@ -2,7 +2,7 @@ namespace BuyIn.Tools.RandomStr
 {
     public class RandomString
     {
-        private const string allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        private const string AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace BuyIn.Tools.RandomStr
         // / <returns></returns>
         public static string GenerateSecureUID(int length = 32)
         {
-            return String.Create(length, allowedChars, (buffer, chars) => 
+            return String.Create(length, AllowedChars, (buffer, chars) => 
             {
                 System.Security.Cryptography.RandomNumberGenerator.GetItems(chars, buffer);
             });

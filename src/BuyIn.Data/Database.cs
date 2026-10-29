@@ -5,39 +5,39 @@ namespace BuyIn.Data.Config
 
     public static class Setup
     {
-        private static readonly string dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BuyInData.db");
-        private static readonly string connectionString = $"Data Source={dbPath}";
+        private static readonly string _dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BuyInData.db");
+        private static readonly string _connectionString = $"Data Source={_dbPath}";
 
         public static bool CreateDB()
         {
-            if (!Path.Exists(dbPath)) 
+            if (!Path.Exists(_dbPath)) 
             {
                 try 
                 {
-                    var file = File.Create(dbPath);
-                    Logger.Info(body: "Database file created", resource: nameof(Setup), attributes: new() { ["path"] = dbPath }); // file created
+                    var file = File.Create(_dbPath);
+                    Logger.Info(body: "Database file created", resource: nameof(Setup), attributes: new() { ["path"] = _dbPath }); // file created
                     file.Close();
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(body: "Failed to create database file", resource: nameof(Setup), attributes: new() { ["path"] = dbPath }, exception: ex); // failed to make file
+                    Logger.Error(body: "Failed to create database file", resource: nameof(Setup), attributes: new() { ["path"] = _dbPath }, exception: ex); // failed to make file
                     return false;
                 }
             }
             else
             {
-                Logger.Info(body: "Database file already exists", resource: nameof(Setup), attributes: new() { ["path"] = dbPath }); // file exists
+                Logger.Info(body: "Database file already exists", resource: nameof(Setup), attributes: new() { ["path"] = _dbPath }); // file exists
                 return true;
             }
         }
 
         public static SqliteConnection CreateConnection()
         {
-            Logger.Info(body: "Opening database connection", resource: nameof(Setup), attributes: new() { ["connectionString"] = connectionString }); // making connection
+            Logger.Info(body: "Opening database connection", resource: nameof(Setup), attributes: new() { ["connectionString"] = _connectionString }); // making connection
             try
             {
-                var connection = new SqliteConnection(connectionString);
+                var connection = new SqliteConnection(_connectionString);
                 connection.Open();
                 Logger.Info(body: "Database connection opened", resource: nameof(Setup)); // connection open
                 return connection;
@@ -45,7 +45,7 @@ namespace BuyIn.Data.Config
             }
             catch (Exception e)
             {
-                Logger.Error(body: "Failed to open database connection", resource: nameof(Setup), attributes: new() { ["connectionString"] = connectionString }, exception: e); // failed to connect
+                Logger.Error(body: "Failed to open database connection", resource: nameof(Setup), attributes: new() { ["connectionString"] = _connectionString }, exception: e); // failed to connect
                 throw;
             }
         }
