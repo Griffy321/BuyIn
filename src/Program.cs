@@ -13,8 +13,9 @@ namespace BuyIn
             Logger.Info(body: "App opened", resource: nameof(RunProgram));
             try
             {
+                Setup.CreateTable("BuyInPlayer.db", "Players", typeof(Player), nameof(Player.PlayerId));
                 Player player = new Player("hello", "world");
-                new Insert().GetMetaData(player);
+                new Insert().WriteRecord("BuyInPlayer.db", "Players", player);
             }
             catch (Exception ex)
             {
