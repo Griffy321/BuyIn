@@ -14,7 +14,7 @@ namespace BuyIn
             try
             {
                 Player player = new Player("hello", "world");
-                Insert.GetMetaData(player);
+                new Insert().GetMetaData(player);
             }
             catch (Exception ex)
             {
