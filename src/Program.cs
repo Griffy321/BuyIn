@@ -1,6 +1,8 @@
 using BuyIn.Features.Player;
 using BuyIn.Tools.Log;
 using BuyIn.Data.Config;
+using BuyIn.Data.Write;
+
 
 namespace BuyIn
 {
@@ -12,6 +14,7 @@ namespace BuyIn
             try
             {
                 Player player = new Player("hello", "world");
+                Insert.GetMetaData(player);
             }
             catch (Exception ex)
             {
