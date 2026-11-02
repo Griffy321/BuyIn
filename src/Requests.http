@@ -1,13 +1,20 @@
 @host = http://localhost:5000
 
-GET {{host}}/
-###
-
+### Create a player
+# @name createPlayer
 POST {{host}}/players
 Content-Type: application/json
 
 {
     "FirstName" : "James",
-    "LastName" : "G",
-    "PlayerId" : null
+    "LastName" : "G"
 }
+
+### Get the player you just created (send "Create a player" first; this reuses its playerId)
+GET {{host}}/players/{{createPlayer.response.body.$.playerId}}
+
+### Get a player that doesn't exist (should be a 404)
+GET {{host}}/players/doesnotexist
+
+### Get a specific player (paste an id from the database or the app's Home screen)
+GET {{host}}/players/2b92d20f698249b2b120e9ea2a52230d

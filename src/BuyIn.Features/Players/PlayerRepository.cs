@@ -4,7 +4,7 @@ namespace BuyIn.Features.PlayerRepository
     using BuyIn.Features.Player;
     using BuyIn.Tools.Log;
 
-    public class PlayerData
+    public static class PlayerData
     {
         // the one place the player db and table names live; public so Program.cs can use them too
         public const string DbName = "BuyInPlayer.db";
