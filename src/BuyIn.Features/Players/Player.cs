@@ -1,6 +1,5 @@
 namespace BuyIn.Features.Player
 {
-    using System.Reflection.Metadata.Ecma335;
 
     using BuyIn.Tools.RandomStr;
     using BuyIn.Tools.Log;
@@ -21,10 +20,20 @@ namespace BuyIn.Features.Player
         {
             get {return field;} 
             init;
-        } = RandomString.GenerateUID();
+        }
 
-        public Player(string firstName, string lastName)
+        public Player(string firstName, string lastName, string? playerId = null)
         {
+            if (String.IsNullOrWhiteSpace(playerId))
+            {
+                this.PlayerId = RandomString.GenerateUID();
+                Logger.Info(body: "Player created", resource: nameof(Player), attributes: new() { ["playerId"] = PlayerId });
+            }
+            else
+            {
+                this.PlayerId = playerId;
+                Logger.Info(body: "Player created", resource: nameof(Player), attributes: new() { ["playerId"] = PlayerId });
+            }
             if (String.IsNullOrWhiteSpace(firstName))
             {
                 this.PlayerFirstName = "";

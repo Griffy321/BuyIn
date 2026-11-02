@@ -4,9 +4,9 @@ namespace BuyIn.Data.Write
     using System.Reflection;
     using BuyIn.Tools.Log;
 
-    public class Insert
+    public static class Insert
     {
-        public Dictionary<string, object?> GetMetaData(object record)
+        public static Dictionary<string, object?> GetMetaData(object record)
         {
             Dictionary<string, object?> columnValues = new Dictionary<string, object?>();
             Array propertyDescriptions = record.GetType().GetProperties();
@@ -19,7 +19,7 @@ namespace BuyIn.Data.Write
             return columnValues;
         }
 
-        public bool WriteRecord(string dbName, string tableName, object record)
+        public static bool WriteRecord(string dbName, string tableName, object record)
         {
             Dictionary<string, object?> columnValues = GetMetaData(record);
             string columnNames = String.Join(", ", columnValues.Keys);

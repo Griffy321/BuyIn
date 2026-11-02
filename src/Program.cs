@@ -1,29 +1,36 @@
-using BuyIn.Features.Player;
-using BuyIn.Tools.Log;
 using BuyIn.Data.Config;
 using BuyIn.Data.Write;
+using BuyIn.Features.Player;
+using BuyIn.Features.PlayerRepository;
 
 
-namespace BuyIn
+
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+Setup.CreateTable(PlayerData.DbName, PlayerData.TableName, typeof(Player), nameof(Player.PlayerId));
+
+app.MapPost("/players", (CreatePlayerRequest req) =>
 {
-    public class RunProgram
+    var player = new Player(req.FirstName, req.LastName);
+    bool isPlayerInserted = Insert.WriteRecord(PlayerData.DbName, PlayerData.TableName, player);
+    if (isPlayerInserted)
     {
-        public static void Main(string[] args)
-        {
-            Logger.Info(body: "App opened", resource: nameof(RunProgram));
-            try
-            {
-                Setup.CreateTable("BuyInPlayer.db", "Players", typeof(Player), nameof(Player.PlayerId));
-                Player player = new Player("hello", "world");
-                new Insert().WriteRecord("BuyInPlayer.db", "Players", player);
-            }
-            catch (Exception ex)
-            {
-                // anything that wasn't handled elsewhere ends up here, so it gets logged before the app crashes
-                Logger.Error(body: "Unhandled exception", resource: nameof(RunProgram), exception: ex);
-                throw;
-            }
-            Logger.Info(body: "App closed", resource: nameof(RunProgram));
-        }
+        return Results.Ok(new CreatePlayerResponse(player.PlayerId));
     }
-}
+    else
+    {
+        return Results.Problem(
+            detail: "Failed to create the user.",
+            statusCode: StatusCodes.Status500InternalServerError,
+            title: "Server error"
+        );
+    }
+});
+
+app.Run();
+
+public record CreatePlayerRequest(string FirstName, string LastName);
+public record CreatePlayerResponse(string PlayerId);
+public record PlayerResponse(string PlayerId, string FirstName, string LastName);

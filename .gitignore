@@ -483,6 +483,8 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-Build Plan.md
-File Structure.md
-csharpnotes.md
+TestScreens/
+tasks.md
+
+# local SQLite databases, in case one ever ends up inside the repo
+*.db
