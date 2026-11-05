@@ -1,5 +1,5 @@
 # Starts everything needed to test BuyIn on your phone:
-#   1. the C# server, in its own window, reachable over Wi-Fi (restarts itself when you save C# files)
+#   1. the Python server, in its own window, reachable over Wi-Fi (restarts itself when you save Python files)
 #   2. the Expo dev server, in this window, with the app pointed at this PC's current IP
 #
 # Run from the repo root:
@@ -40,7 +40,7 @@ if (-not (Get-NetFirewallRule -DisplayName 'BuyIn API' -ErrorAction SilentlyCont
     Write-Host "  New-NetFirewallRule -DisplayName 'BuyIn API' -Direction Inbound -Protocol TCP -LocalPort $port -Action Allow -Profile Private" -ForegroundColor Yellow
 }
 
-# --- Start the C# server in a new window, unless it's already running ---
+# --- Start the Python server in a new window, unless it's already running ---
 $listening = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
 if ($listening) {
     if ($listening.LocalAddress -contains '0.0.0.0') {
@@ -51,8 +51,13 @@ if ($listening) {
         exit 1
     }
 } else {
-    Write-Host "Starting the C# server in a new window..." -ForegroundColor Green
-    $serverCommand = "Set-Location '$root\src'; dotnet watch run --urls http://0.0.0.0:$port"
+    python -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('fastapi') and importlib.util.find_spec('uvicorn') else 1)"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Installing server dependencies (first run only)..." -ForegroundColor Green
+        python -m pip install -r "$root\src\requirements.txt"
+    }
+    Write-Host "Starting the Python server in a new window..." -ForegroundColor Green
+    $serverCommand = "Set-Location '$root\src'; python -m uvicorn main:app --host 0.0.0.0 --port $port --reload"
     Start-Process powershell -ArgumentList '-NoExit', '-Command', $serverCommand
 }
 
