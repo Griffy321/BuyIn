@@ -488,3 +488,9 @@ tasks.md
 
 # local SQLite databases, in case one ever ends up inside the repo
 *.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/

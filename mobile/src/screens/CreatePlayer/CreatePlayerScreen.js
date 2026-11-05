@@ -17,7 +17,7 @@ import { API_URL } from '../../config';
 import { savePlayerId } from '../../storage/playerStorage';
 import { colors, radius, spacing } from '../../theme';
 
-// Sends POST /players to the C# server, saves the playerId it sends back on this phone,
+// Sends POST /players to the Python server, saves the playerId it sends back on this phone,
 // then tells App (via onCreated) so it can move on to the Home screen.
 export default function CreatePlayerScreen({ onCreated }) {
   const [firstName, setFirstName] = useState('');
