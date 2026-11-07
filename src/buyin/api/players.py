@@ -1,21 +1,38 @@
-# The /players endpoints. The app in mobile/src/api/players.js calls these.
-#
-# Look up: FastAPI "Bigger Applications - Multiple Files" (APIRouter) and "Path Parameters".
-#
-# TODO 1: create an APIRouter called `router`. main.py will plug it into the app.
+from fastapi import APIRouter
+from buyin.features.players.player import Player
+from buyin.features.players import player_repository
+from buyin.tools.helpers import is_blank
+from buyin.api.responses import problem
+from buyin.data.write import write_record
+from buyin.api.requests import CreatePlayerRequest
+
+ENDPOINT = "/players"
+
+router = APIRouter()
 
 
-# TODO 2: POST /players
-#   - Body: JSON with firstName and lastName, e.g. {"firstName": "James", "lastName": "G"}
-#     (use your helper in requests.py to read it)
-#   - Make a Player and save it with write.write_record(...)
-#   - Saved:      200  {"playerId": "..."}
-#   - Not saved:  500  problem response (see responses.py)
+@router.post("/players") # make new player # add checks on the values that come in
+async def make_player(body: CreatePlayerRequest):
+    if is_blank(body.first_name) or is_blank(body.last_name):
+        return problem(400, "Please provide both first and last name")
+    player = Player(first_name=body.first_name, last_name=body.last_name)
+    saved = write_record(player_repository.DB_NAME, player_repository.TABLE_NAME, player)
+    if not saved:
+        return problem(500, "Couldn't save the player")
+    return {"playerId": player.player_id}
 
 
-# TODO 3: GET /players/{player_id}
-#   - Look the player up with player_repository.get_player_info(...)
-#   - Found:              200  {"playerId": "...", "firstName": "...", "lastName": "..."}
-#   - Not found (None):   404  problem response. The app relies on this 404 to forget a stale saved ID.
-#   - Exception raised:   500  problem response. The app keeps its saved ID and offers a retry.
-#   (Note: JSON keys are camelCase even though the Python fields are snake_case.)
+@router.get("/players/{player_id}") # player details
+async def get_player_info(player_id: str):
+    try: 
+        player_details = player_repository.get_player_info(player_id=player_id)
+        if player_details is None:
+            return problem(status=404, detail=f"No player with ID {player_id}")
+        else:
+            return {
+                    "playerId": player_details.player_id, 
+                    "firstName": player_details.player_first_name, 
+                    "lastName": player_details.player_last_name
+                    }
+    except Exception:
+        return problem(status=500, detail="Internal server error")
