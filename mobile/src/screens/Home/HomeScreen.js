@@ -1,13 +1,28 @@
 import { useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Card from '../../components/Card';
 import Chip from '../../components/Chip';
-import { colors, radius, spacing } from '../../theme';
+import GamesPlayedCard from '../../components/GamesPlayedCard';
+import PnLChart from '../../components/PnLChart';
+import SpinningChip from '../../components/SpinningChip';
+import { chipOrder, colors, radius, spacing } from '../../theme';
 
-// Shown when this phone already has a player saved.
-// For now it only knows the player's ID; once GET /players/{id} exists it can show their name.
-export default function HomeScreen({ playerId, onForget }) {
+// The player's home: greeting, lifetime P&L chart, games played.
+//
+// `player` is { playerId, firstName, lastName } from GET /players/{id} (or from the create screen).
+// `isNewPlayer` is true straight after creating a player, so the greeting can say welcome
+// instead of welcome back.
+//
+// TODO once the server can return a player's games: pass the real list in here. Until then
+// every player has no games, so the chart shows its empty state and the count is 0.
+export default function HomeScreen({ player, isNewPlayer, onForget }) {
   const [forgetting, setForgetting] = useState(false);
+  const games = [];
+  const runningTotals = toRunningTotals(games);
+
+  const firstName = player.firstName || 'there';
+  const initial = player.firstName ? player.firstName[0].toUpperCase() : '?';
 
   function confirmForget() {
     Alert.alert(
@@ -34,20 +49,29 @@ export default function HomeScreen({ playerId, onForget }) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Chip color={colors.blue} size={40} />
+          <SpinningChip label={initial} />
           <View style={styles.headerText}>
-            <Text style={styles.title}>Welcome back!</Text>
-            <Text style={styles.subtitle}>This phone remembers you</Text>
+            <Text style={styles.greeting} numberOfLines={1}>
+              {isNewPlayer ? `Welcome, ${firstName}!` : `Hey ${firstName}!`}
+            </Text>
+            <Text style={styles.subtitle}>
+              {isNewPlayer ? "You're all set. Pull up a chair" : 'Good to see you back at the table'}
+            </Text>
           </View>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.label}>Your player ID</Text>
-          <Text style={styles.playerId} selectable>
-            {playerId}
-          </Text>
+        <Card>
+          <PnLChart totals={runningTotals} />
+        </Card>
+
+        <GamesPlayedCard count={games.length} />
+
+        <View style={styles.chipRow}>
+          {chipOrder.map((color) => (
+            <Chip key={color} color={color} size={44} />
+          ))}
         </View>
 
         {/* Dev tool: lets you test the new-player flow without reinstalling. */}
@@ -57,43 +81,51 @@ export default function HomeScreen({ playerId, onForget }) {
           disabled={forgetting}
           style={({ pressed }) => [styles.forgetButton, (pressed || forgetting) && styles.pressed]}
         >
-          <Text style={styles.forgetText}>Forget me</Text>
+          <Text style={styles.forgetText}>Forget me (dev)</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+// Your total after each game, oldest first, which is what the chart draws.
+function toRunningTotals(games) {
+  let total = 0;
+  return games.map((game) => (total += game.profit));
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, gap: spacing.md },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  headerText: { flex: 1 },
-  title: { color: colors.black, fontSize: 24, fontWeight: '800' },
-  subtitle: { color: colors.muted, fontSize: 14, marginTop: 2 },
-  card: {
-    backgroundColor: colors.white,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: spacing.sm,
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    gap: spacing.md,
   },
-  label: { color: colors.muted, fontSize: 14, fontWeight: '600' },
-  playerId: {
-    color: colors.black,
-    fontSize: 16,
-    fontWeight: '700',
-    fontFamily: Platform.select({ android: 'monospace', ios: 'Menlo' }),
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  headerText: { flex: 1 },
+  greeting: { color: colors.black, fontSize: 26, fontWeight: '800' },
+  subtitle: { color: colors.muted, fontSize: 14, marginTop: 2 },
+  chipRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: 'auto',
+    paddingTop: spacing.md,
   },
   forgetButton: {
     alignSelf: 'center',
     borderColor: colors.red,
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: radius.md,
-    paddingVertical: 10,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
   },
   pressed: { opacity: 0.6 },
-  forgetText: { color: colors.red, fontSize: 15, fontWeight: '800' },
+  forgetText: { color: colors.red, fontSize: 13, fontWeight: '700' },
 });

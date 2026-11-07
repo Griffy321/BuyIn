@@ -11,14 +11,16 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ApiError } from '../../api/client';
 import { createPlayer } from '../../api/players';
+import Card from '../../components/Card';
 import Chip from '../../components/Chip';
-import { API_URL } from '../../config';
 import { savePlayerId } from '../../storage/playerStorage';
 import { colors, radius, spacing } from '../../theme';
 
 // Sends POST /players to the Python server, saves the playerId it sends back on this phone,
-// then tells App (via onCreated) so it can move on to the Home screen.
+// then hands App the new player (via onCreated) so it can move on to the Home screen.
+// The names come from what was typed, so there's no need to ask the server for them again.
 export default function CreatePlayerScreen({ onCreated }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -29,12 +31,15 @@ export default function CreatePlayerScreen({ onCreated }) {
     if (loading) return; // stops a double-tap from creating two players
     setLoading(true);
     setError(null);
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
     try {
-      const { playerId } = await createPlayer(firstName.trim(), lastName.trim());
+      const { playerId } = await createPlayer(trimmedFirstName, trimmedLastName);
       await savePlayerId(playerId);
-      onCreated(playerId);
-    } catch (e) {
-      setError(e.message);
+      onCreated({ playerId, firstName: trimmedFirstName, lastName: trimmedLastName });
+    } catch (createError) {
+      // An ApiError means the server answered but said no; anything else means it never answered.
+      setError({ message: createError.message, serverAnswered: createError instanceof ApiError });
       setLoading(false);
     }
     // No setLoading(false) on success: this screen is replaced by Home straight away.
@@ -51,13 +56,11 @@ export default function CreatePlayerScreen({ onCreated }) {
             <Chip color={colors.green} size={40} />
             <View style={styles.headerText}>
               <Text style={styles.title}>Create player</Text>
-              <Text style={styles.subtitle} numberOfLines={1}>
-                POST {API_URL}/players
-              </Text>
+              <Text style={styles.subtitle}>Tell us who's at the table</Text>
             </View>
           </View>
 
-          <View style={styles.card}>
+          <Card style={styles.form}>
             <Text style={styles.label}>First name</Text>
             <TextInput
               style={styles.input}
@@ -92,17 +95,19 @@ export default function CreatePlayerScreen({ onCreated }) {
                 <Text style={styles.buttonText}>Create player</Text>
               )}
             </Pressable>
-          </View>
+          </Card>
 
           {error && (
-            <View style={[styles.card, styles.errorCard]}>
+            <Card style={styles.errorCard}>
               <Text style={styles.errorTitle}>Something went wrong</Text>
-              <Text style={styles.errorText}>{error}</Text>
-              <Text style={styles.hint}>
-                Check the server is running on the PC, listening on 0.0.0.0, and that the
-                phone is on the same Wi-Fi.
-              </Text>
-            </View>
+              <Text style={styles.errorText}>{error.message}</Text>
+              {!error.serverAnswered && (
+                <Text style={styles.hint}>
+                  Check the server is running on the PC, listening on 0.0.0.0, and that the
+                  phone is on the same Wi-Fi.
+                </Text>
+              )}
+            </Card>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -116,15 +121,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   headerText: { flex: 1 },
   title: { color: colors.black, fontSize: 24, fontWeight: '800' },
-  subtitle: { color: colors.muted, fontSize: 12, marginTop: 2 },
-  card: {
-    backgroundColor: colors.white,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
+  subtitle: { color: colors.muted, fontSize: 14, marginTop: 2 },
+  form: { gap: spacing.sm },
   label: { color: colors.muted, fontSize: 14, fontWeight: '600' },
   input: {
     borderColor: colors.border,
@@ -145,7 +143,7 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.7 },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: '800' },
-  errorCard: { borderColor: colors.red, borderWidth: 2 },
+  errorCard: { borderColor: colors.red, borderWidth: 2, gap: spacing.sm },
   errorTitle: { color: colors.red, fontSize: 16, fontWeight: '800' },
   errorText: { color: colors.black, fontSize: 14 },
   hint: { color: colors.muted, fontSize: 13 },
