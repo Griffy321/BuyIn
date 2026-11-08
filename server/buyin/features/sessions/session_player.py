@@ -1,12 +1,49 @@
-from buyin.tools import random_string  # noqa: F401
+from buyin.tools import random_string
+from datetime import datetime, timezone
+from typing import Dict, List
 
-# class SessionPlayer:
-#     buyins: list[Decimal]
-#     cash_out: Decimal
-#     status: str
-#     is_settled: bool
-#     joined_at: datetime
-#     left_at: datetime
-#
-#     # def set_joined_at(self, player_id: str) -> datetime:
-#     #     return player_id
+class SessionPlayer:
+    """
+    The perpose of this class is to hold the attributes of each player in the session, e.g. their buyins, when they joined (UTC), if they have cashed out etc.
+    Each player when joining a session will have one of these instances created
+    """
+
+    def __init__(self, player_id, chips, buyin):
+        self.player_id: int = player_id
+        self.chips: Dict[str, List[int]] = chips
+        self.buyin: int = buyin
+        self.joined_at: datetime
+        self.status: str # want to try and show this in the top corner of the app like an "On Air" sign but with the users game status
+        self.is_settled: bool
+        self.cash_out: int
+        self.left_at: datetime
+
+
+    def set_joined_at(self, player_id: str) -> bool:
+        if self.joined_at is None: 
+            self.joined_at = datetime.now(timezone.utc)
+            return True
+        else:
+            return False 
+
+
+    def update_status(self, player_id):
+        """Updates the players status in the session"""
+        pass
+
+
+    def set_cashed_out(self, player_id: str, amount: int) -> bool:
+        if self.cash_out is None: 
+            self.cash_out = amount
+            self.is_settled = True
+            return True
+        else:
+            return False 
+
+
+    def set_left_at(self, player_id: str) -> bool:
+        if self.left_at is None: 
+            self.left_at = datetime.now(timezone.utc)
+            return True
+        else:
+            return False 

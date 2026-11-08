@@ -6,7 +6,7 @@ from buyin.tools import logger
 
 _RESOURCE = "PlayerData"
 
-# the one place the player db and table names live; main.py uses them too
+# the one place the player db and table names live 
 DB_NAME = "BuyInPlayer.db"
 TABLE_NAME = "Players"
 
@@ -27,6 +27,25 @@ def get_player_info(player_id: str) -> Player | None:
             else:
                 logger.info(body="Player not found", resource=_RESOURCE, attributes={"playerId": player_id})
                 return None
+    except Exception as e:
+        logger.error(body="Failed to read player", resource=_RESOURCE, attributes={"playerId": player_id, "tableName": TABLE_NAME}, exception=e)
+        raise
+
+def player_exists(player_id: str) -> bool:
+    try:
+        with closing(create_connection(DB_NAME)) as connection:
+            row = connection.execute(
+                f"""
+                select PlayerId from {TABLE_NAME} where playerId = :playerId
+                """,
+                {"playerId": player_id},
+            ).fetchone()
+
+            if row is not None:
+                return True
+            else:
+                logger.info(body="Player not found", resource=_RESOURCE, attributes={"playerId": player_id})
+                return False
     except Exception as e:
         logger.error(body="Failed to read player", resource=_RESOURCE, attributes={"playerId": player_id, "tableName": TABLE_NAME}, exception=e)
         raise
