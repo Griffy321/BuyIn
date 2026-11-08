@@ -54,10 +54,10 @@ if ($listening) {
     python -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('fastapi') and importlib.util.find_spec('uvicorn') else 1)"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Installing server dependencies (first run only)..." -ForegroundColor Green
-        python -m pip install -r "$root\src\requirements.txt"
+        python -m pip install -r "$root\server\requirements.txt"
     }
     Write-Host "Starting the Python server in a new window..." -ForegroundColor Green
-    $serverCommand = "Set-Location '$root\src'; python -m uvicorn main:app --host 0.0.0.0 --port $port --reload"
+    $serverCommand = "Set-Location '$root\server'; python -m uvicorn main:app --host 0.0.0.0 --port $port --reload"
     Start-Process powershell -ArgumentList '-NoExit', '-Command', $serverCommand
 }
 
