@@ -1,6 +1,7 @@
 from buyin.tools import random_string
 from datetime import datetime, timezone
 from typing import Dict, List
+from buyin.tools.random_string import generate_uid
 
 class SessionPlayer:
     """
@@ -8,8 +9,10 @@ class SessionPlayer:
     Each player when joining a session will have one of these instances created
     """
 
-    def __init__(self, player_id, chips, buyin):
-        self.player_id: int = player_id
+    def __init__(self, session_id, player_id, chips, buyin, session_player_id = None):
+        self.session_player_id: str
+        self.session_id:str = session_id
+        self.player_id: str = player_id
         self.chips: Dict[str, List[int]] = chips
         self.buyin: int = buyin
         self.joined_at: datetime
@@ -18,6 +21,12 @@ class SessionPlayer:
         self.cash_out: int
         self.left_at: datetime
 
+    def set_session_player_id(self):
+        if self.session_player_id is None:
+            self.session_player_id = generate_uid()
+            return True
+        else:
+            return False
 
     def set_joined_at(self, player_id: str) -> bool:
         if self.joined_at is None: 
