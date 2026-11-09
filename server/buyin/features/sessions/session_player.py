@@ -28,7 +28,7 @@ class SessionPlayer:
         else:
             return False
 
-    def set_joined_at(self, player_id: str) -> bool:
+    def set_joined_at(self) -> bool:
         if self.joined_at is None: 
             self.joined_at = datetime.now(timezone.utc)
             return True
@@ -36,22 +36,15 @@ class SessionPlayer:
             return False 
 
 
-    def update_status(self, player_id):
+    def update_status(self):
         """Updates the players status in the session"""
         pass
 
 
-    def set_cashed_out(self, player_id: str, amount: int) -> bool:
-        if self.cash_out is None: 
+    def set_cashed_out(self, amount: int) -> bool:
+        if self.cash_out is None and self.is_settled == False and self.left_at is None: 
             self.cash_out = amount
             self.is_settled = True
-            return True
-        else:
-            return False 
-
-
-    def set_left_at(self, player_id: str) -> bool:
-        if self.left_at is None: 
             self.left_at = datetime.now(timezone.utc)
             return True
         else:
