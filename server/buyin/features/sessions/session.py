@@ -6,12 +6,12 @@ class Session:
     """The object that all the players join to play a game"""
 
     def __init__(self, host_player, cash_in_play):
-        self.session_id: str
+        self.session_id: str | None = None
         self.host_player: SessionPlayer = host_player
-        self.session_players: list[SessionPlayer]
+        self.session_players: list[SessionPlayer] = []
         self.cash_in_play: int = cash_in_play
-        self.initialized_at: datetime
-        self.ended_at: datetime
+        self.initialized_at: datetime | None = None
+        self.ended_at: datetime | None = None
 
 
     def set_session_id(self):
@@ -51,7 +51,7 @@ class Session:
     def settle_session(self, player_cashouts: dict[SessionPlayer, int]):
         total_cashout = 0
         for cashout in player_cashouts.values():
-            cashout += total_cashout
+            total_cashout += cashout 
         if self.cash_in_play - total_cashout != 0:
             raise ValueError()
 

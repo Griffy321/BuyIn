@@ -10,16 +10,16 @@ class SessionPlayer:
     """
 
     def __init__(self, session_id, player_id, chips, buyin, session_player_id = None):
-        self.session_player_id: str
-        self.session_id:str = session_id
+        self.session_player_id: str | None = None
+        self.session_id: str = session_id
         self.player_id: str = player_id
         self.chips: Dict[str, List[int]] = chips
         self.buyin: int = buyin
-        self.joined_at: datetime
-        self.status: str # want to try and show this in the top corner of the app like an "On Air" sign but with the users game status
-        self.is_settled: bool
-        self.cash_out: int
-        self.left_at: datetime
+        self.joined_at: datetime | None = None
+        self.status: str | None = None # want to try and show this in the top corner of the app like an "On Air" sign but with the users game status
+        self.is_settled: bool = False
+        self.cash_out: int | None = None
+        self.left_at: datetime | None = None
 
     def set_session_player_id(self):
         if self.session_player_id is None:
