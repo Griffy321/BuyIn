@@ -43,6 +43,9 @@ class Session:
 
 
     def add_player(self, player: SessionPlayer) -> bool:
+        if player.session_id != self.session_id:
+            logger.warn(body="Player belongs to a different session", resource=_RESOURCE, attributes={"sessionId": self.session_id, "playerSessionId": player.session_id, "playerId": player.player_id})
+            return False
         if self.find_player(player.player_id) is not None:
             logger.warn(body="Player is already in the session", resource=_RESOURCE, attributes={"sessionId": self.session_id, "playerId": player.player_id})
             return False
