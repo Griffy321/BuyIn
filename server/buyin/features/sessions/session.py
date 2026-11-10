@@ -20,6 +20,7 @@ class Session:
         self.session_players: list[SessionPlayer] = []
         self.cash_in_play: int = 0
         self.initialized_at: datetime = datetime.now(timezone.utc)
+        self.is_settled: bool = False
         self.ended_at: datetime | None = None
         logger.info(body="Session created", resource=_RESOURCE, attributes={"sessionId": self.session_id})
 
@@ -84,5 +85,6 @@ class Session:
         for player_id, cashout in player_cashouts.items():
             self.remove_player(player_id, cashout)
         self.ended_at = datetime.now(timezone.utc)
+        self.is_settled = True
         logger.info(body="Session settled", resource=_RESOURCE, attributes={"sessionId": self.session_id, "totalCashout": total_cashout})
         return True

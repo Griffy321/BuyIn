@@ -10,14 +10,14 @@ class SessionPlayer:
     Each player when joining a session will have one of these instances created
     """
 
-    def __init__(self, session_id: str, player_id: str, chips: dict[str, list[int]], buyin: int, session_player_id: str | None = None):
+    def __init__(self, player_id: str, session_id: str, buyin: int, session_player_id: str | None = None):
         if is_blank(session_player_id):
             self.session_player_id: str = generate_uid()
         else:
             self.session_player_id = session_player_id
         self.session_id: str = session_id
         self.player_id: str = player_id
-        self.chips: dict[str, list[int]] = chips
+        self.chips: dict[str, list[int]]
         self.buyin: int = buyin
         self.joined_at: datetime | None = None
         self.status: str | None = None # want to try and show this in the top corner of the app like an "On Air" sign but with the users game status
