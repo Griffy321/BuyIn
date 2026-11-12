@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
+from pydantic import Field
 
 # contracts for requests that come in
 class CamelModel(BaseModel):
@@ -18,6 +19,5 @@ class CreateSessionRequest(CamelModel):
 
 class CreateSessionPlayerRequest(CamelModel):
     player_id: str
-    session_id: str
-    buyin: int
+    buyin: int = Field(gt=0)
 

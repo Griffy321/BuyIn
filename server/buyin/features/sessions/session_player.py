@@ -17,7 +17,7 @@ class SessionPlayer:
             self.session_player_id = session_player_id
         self.session_id: str = session_id
         self.player_id: str = player_id
-        self.chips: dict[str, list[int]]
+        self.chips: dict[str, list[int]] = {}
         self.buyin: int = buyin
         self.joined_at: datetime | None = None
         self.status: str | None = None # want to try and show this in the top corner of the app like an "On Air" sign but with the users game status
