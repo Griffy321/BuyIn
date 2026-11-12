@@ -1,13 +1,15 @@
 from buyin.data import config
 from buyin.features.players import player_repository
 from buyin.features.players.player import Player
+from buyin.features.sessions import session_repository
 from fastapi import FastAPI
 from starlette.exceptions import HTTPException
 from buyin.api import responses
 from buyin.api import players
 from buyin.api import sessions
 
-# config.create_table(player_repository.DB_NAME, player_repository.TABLE_NAME, Player, "player_id")
+config.create_table(player_repository.DB_NAME, player_repository.TABLE_NAME, Player, "player_id")
+config.run_schema(session_repository.DB_NAME, "sessions.sql")
 
 app = FastAPI()
 

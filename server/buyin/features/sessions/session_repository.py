@@ -8,8 +8,10 @@ from buyin.features.players import player_repository
 
 _RESOURCE = "SessionPlayerData"
 
-DB_NAME = "BuyInPlayerSession.db"
-TABLE_NAME = "SessionPlayers"
+# both tables live in one file so SessionPlayers.SessionId can reference Sessions. Schema: buyin/data/schemas/sessions.sql
+DB_NAME = "BuyInSession.db"
+SESSION_TABLE_NAME = "Sessions"
+SESSION_PLAYER_TABLE_NAME = "SessionPlayers"
 
 
 def session_player_exists(session_player_id: str):
@@ -17,7 +19,24 @@ def session_player_exists(session_player_id: str):
     Checks if the session player record has is_settled = false meaning they are still in play and 'exist' in a session. 
     Returns a bool.
     """
-    pass
+    with closing(create_connection(DB_NAME)) as connection:
+        row = connection.execute(
+            f"""
+            select
+                SessionPlayerId
+            from
+                {SESSION_PLAYER_TABLE_NAME}
+            where
+                1 = 1
+                and IsSettled = 0
+                and SessionPlayerId = :session_player_id
+            """,
+            {"session_player_id": session_player_id}
+        ).fetchone()
+
+        if row is not None:
+            return True
+        return False
 
 
 def session_exists(session_id: str):
@@ -25,7 +44,24 @@ def session_exists(session_id: str):
     Checks if the session record has is_settled = false meaning there is still players in the session.
     Returns a bool.
     """
-    pass
+    with closing(create_connection(DB_NAME)) as connection:
+        row = connection.execute(
+            f"""
+            select
+                SessionId
+            from
+                {SESSION_TABLE_NAME}
+            where
+                1 = 1
+                and IsSettled = 0
+                and SessionId = :session_id
+            """,
+            {"session_id": session_id}
+            ).fetchone()
+        
+        if row is not None:
+            return True
+        return False
 
 
 def make_new_session(host_player_id: str):
