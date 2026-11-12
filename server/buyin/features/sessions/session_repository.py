@@ -33,6 +33,7 @@ def session_player_exists(session_player_id: str):
             """,
             {"session_player_id": session_player_id}
         ).fetchone()
+        print("") # add logging
 
         if row is not None:
             return True
@@ -58,39 +59,20 @@ def session_exists(session_id: str):
             """,
             {"session_id": session_id}
             ).fetchone()
+        print("") # add logging
         
         if row is not None:
             return True
         return False
 
 
-def make_new_session(host_player_id: str):
+def get_session_info(host_player_id: str): # i think this should be done by the api file
     """
-    Creates a new session for session players to join. 
-    Returns the session ID.
     """
     pass
 
 
-def make_session_player(player_id: str, session_id: str, buyin: int):
+def get_session_player_info(player_id: str, session_id: str): # i think this should be done by the api file
     """
-    Creates a new session player to be added to a session. 
-    Returns the session player ID.
-    """
-    pass
-
-
-def end_session_player(session_player_id: str):
-    """
-    Ends the session for the session player.
-    Returns a bool.
-    """
-    pass
-
-
-def end_session(session_id: str):
-    """
-    Ends the session.
-    Returns a bool.
     """
     pass

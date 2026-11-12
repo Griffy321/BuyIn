@@ -5,7 +5,19 @@ from pydantic.alias_generators import to_camel
 class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
+
+
 class CreatePlayerRequest(CamelModel):
     first_name: str
     last_name: str
+
+
+class CreateSessionRequest(CamelModel):
+    player_id: str
+
+
+class CreateSessionPlayerRequest(CamelModel):
+    player_id: str
+    session_id: str
+    buyin: int
 
