@@ -4,7 +4,7 @@ from buyin.data.config import create_connection
 from buyin.tools import logger
 from buyin.features.sessions.session import Session
 from buyin.features.sessions.session_player import SessionPlayer
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 _RESOURCE = "SessionData"
@@ -20,8 +20,8 @@ def session_exists(session_id: str) -> bool:
     Checks if the session record has is_settled = false meaning there is still players in the session.
     Returns a bool.
     """
-    with closing(create_connection(DB_NAME)) as connection:
-        try:
+    try:
+        with closing(create_connection(DB_NAME)) as connection:
             row = connection.execute(
                 f"""
                 select
@@ -38,9 +38,9 @@ def session_exists(session_id: str) -> bool:
             logger.info(body="Checked if session is active", resource=_RESOURCE, attributes={"sessionId": session_id, "found": row is not None})
 
             return row is not None
-        except Exception as e:
-            logger.error(body="Failed to read player", resource=_RESOURCE, attributes={"sessionId": session_id, "found": row is not None}, exception=e)
-            raise
+    except Exception as exception:
+        logger.error(body="Failed to check if session is active", resource=_RESOURCE, attributes={"sessionId": session_id}, exception=exception)
+        raise
 
 
 def session_player_exists(session_player_id: str) -> bool:
@@ -48,8 +48,8 @@ def session_player_exists(session_player_id: str) -> bool:
     Checks if the session player record has is_settled = false meaning they are still in play and 'exist' in a session. 
     Returns a bool.
     """
-    with closing(create_connection(DB_NAME)) as connection:
-        try:
+    try:
+        with closing(create_connection(DB_NAME)) as connection:
             row = connection.execute(
                 f"""
                 select
@@ -66,12 +66,12 @@ def session_player_exists(session_player_id: str) -> bool:
             logger.info(body="Checked if session player is active", resource=_RESOURCE, attributes={"sessionPlayerId": session_player_id, "found": row is not None})
 
             return row is not None
-        except Exception as e:
-            logger.error(body="Failed to read player", resource=_RESOURCE, attributes={"sessionPlayerId": session_player_id, "found": row is not None}, exception=e)
-            raise
+    except Exception as exception:
+        logger.error(body="Failed to check if session player is active", resource=_RESOURCE, attributes={"sessionPlayerId": session_player_id}, exception=exception)
+        raise
 
 
-def get_session_info(session_id: str):
+def get_session_info(session_id: str) -> Session | None:
     """
     Gets all the info needed to build a session object.
     Returns the session object.
@@ -95,20 +95,21 @@ def get_session_info(session_id: str):
                 {"SessionId": session_id}).fetchone()
 
             if row is not None:
-                session = Session(row[0])
-                session.host_player = str(row[1])
+                session = Session(host_player_id=row[1], session_id=row[0])
                 session.initialized_at = datetime.fromisoformat(row[2])
                 session.is_settled = bool(row[3])
-                session.ended_at = datetime.fromisoformat(row[4])
+                # EndedAt is null until the session is settled, so only convert it when there's a value
+                session.ended_at = datetime.fromisoformat(row[4]) if row[4] is not None else None
+                logger.info(body="Session loaded", resource=_RESOURCE, attributes={"sessionId": session_id})
                 return session
-            print("")
+            logger.info(body="Session not found", resource=_RESOURCE, attributes={"sessionId": session_id})
             return None
-    except Exception as e:
-        print("")
+    except Exception as exception:
+        logger.error(body="Failed to load session", resource=_RESOURCE, attributes={"sessionId": session_id}, exception=exception)
         raise
 
 
-def get_session_player_info(session_player_id: str):
+def get_session_player_info(session_player_id: str) -> SessionPlayer | None:
     """
     Gets all the info needed to build a session player object.
     Returns the session player object.
@@ -117,18 +118,18 @@ def get_session_player_info(session_player_id: str):
         with closing(create_connection(DB_NAME)) as connection: 
             row = connection.execute(
                     f"""
-                    select 
-                        SessionPlayerId
-                        SessionId
-                        PlayerId
-                        Buyin
-                        JoinedAt
-                        Status
-                        IsSettled
-                        CashOut
+                    select
+                        SessionPlayerId,
+                        SessionId,
+                        PlayerId,
+                        Buyin,
+                        JoinedAt,
+                        Status,
+                        IsSettled,
+                        CashOut,
                         LeftAt
-                    from 
-                        {SESSION_TABLE_NAME}
+                    from
+                        {SESSION_PLAYER_TABLE_NAME}
                     where
                         1 = 1
                         and SessionPlayerId = :SessionPlayerId
@@ -136,28 +137,110 @@ def get_session_player_info(session_player_id: str):
                     {"SessionPlayerId": session_player_id}
                     ).fetchone()
             if row is not None:
-                session_player = SessionPlayer(row[2], row[1], row[3], int(row[0]))
-                session_player.joined_at = datetime.fromisoformat(row[4])
+                session_player = SessionPlayer(player_id=row[2], session_id=row[1], buyin=row[3], session_player_id=row[0])
+                # JoinedAt, Status, CashOut and LeftAt can all be null, so only convert them when there's a value
+                session_player.joined_at = datetime.fromisoformat(row[4]) if row[4] is not None else None
+                session_player.status = row[5]
                 session_player.is_settled = bool(row[6])
-                session_player.cash_out = int(row[7])
-                session_player.left_at = datetime.fromisoformat(row[8])
+                session_player.cash_out = row[7]
+                session_player.left_at = datetime.fromisoformat(row[8]) if row[8] is not None else None
+                logger.info(body="Session player loaded", resource=_RESOURCE, attributes={"sessionPlayerId": session_player_id})
                 return session_player
-            print("")
+            logger.info(body="Session player not found", resource=_RESOURCE, attributes={"sessionPlayerId": session_player_id})
             return None
-    except Exception as e:
-        print("")
+    except Exception as exception:
+        logger.error(body="Failed to load session player", resource=_RESOURCE, attributes={"sessionPlayerId": session_player_id}, exception=exception)
         raise
 
 
-def make_session(player_id: str):
+def player_currently_in_session(player_id: str) -> bool:
     """
-    
+    Checks if the provided player_id is currently in a session.
+    Returns a bool.
     """
-    pass
+    try:
+        with closing(create_connection(DB_NAME)) as connection:
+            row = connection.execute(
+                f"""
+                select 
+                    PlayerId
+                from 
+                    {SESSION_PLAYER_TABLE_NAME}
+                where 
+                    1 = 1
+                    and (LeftAt is null or IsSettled = 0)
+                    and PlayerId = :PlayerId
+                """,
+                {"PlayerId": player_id}
+                ).fetchone()
+            logger.info(body="Checked if player is in an active session", resource=_RESOURCE, attributes={"playerId": player_id, "found": row is not None})
+            if row is not None:
+                return True
+            return False
+    except Exception as exception:
+        logger.error(body="Failed to check if player is in an active session", resource=_RESOURCE, attributes={"playerId": player_id}, exception=exception)
+        raise
 
 
-def make_session_player(session_id: str, player_id: str):
+def make_session(player_id: str) -> Session | None: # make the endpoint build the object then this will take the session object and do the sql
     """
-    
+    Makes the session object and writes it to the DB.
+    Returns the session object.
     """
-    pass
+    try:
+        session = Session(host_player_id=player_id)
+        session.initialized_at = datetime.now(timezone.utc)
+        with closing(create_connection(DB_NAME)) as connection:
+            result = connection.execute(
+                f"""
+                insert into {SESSION_TABLE_NAME}(SessionId, HostPlayerId, InitializedAt)
+                values(:SessionId, :HostPlayerId, :InitializedAt)
+                """,
+                {"SessionId": session.session_id, "HostPlayerId": session.host_player_id, "InitializedAt": session.initialized_at.isoformat()}
+                )
+
+            if result.rowcount == 1:
+                logger.info(body="Session saved", resource=_RESOURCE, attributes={"sessionId": session.session_id, "hostPlayerId": session.host_player_id})
+                return session
+            logger.warn(body="Session insert didn't write a row", resource=_RESOURCE, attributes={"sessionId": session.session_id, "hostPlayerId": session.host_player_id, "rowCount": result.rowcount})
+            return None
+
+    except Exception as exception:
+        logger.error(body="Failed to save session", resource=_RESOURCE, attributes={"hostPlayerId": player_id}, exception=exception)
+        raise
+
+
+
+def make_session_player(session_id: str, player_id: str, buyin: int) -> SessionPlayer | None:
+    """
+    Makes the session player object and writes it to the DB.
+    Returns the session player object.
+    """
+    try:
+        session_player = SessionPlayer(player_id=player_id, session_id=session_id, buyin=buyin)
+        session_player.set_joined_at()
+        with closing(create_connection(DB_NAME)) as connection:
+            # IsSettled defaults to 0, and Status, CashOut and LeftAt stay null until the player's status changes or they cash out
+            result = connection.execute(
+                f"""
+                insert into {SESSION_PLAYER_TABLE_NAME}(SessionPlayerId, SessionId, PlayerId, Buyin, JoinedAt)
+                values(:SessionPlayerId, :SessionId, :PlayerId, :Buyin, :JoinedAt)
+                """,
+                {
+                    "SessionPlayerId": session_player.session_player_id,
+                    "SessionId": session_player.session_id,
+                    "PlayerId": session_player.player_id,
+                    "Buyin": session_player.buyin,
+                    "JoinedAt": session_player.joined_at.isoformat(),
+                }
+                )
+
+            if result.rowcount == 1:
+                logger.info(body="Session player saved", resource=_RESOURCE, attributes={"sessionPlayerId": session_player.session_player_id, "sessionId": session_id, "playerId": player_id, "buyin": buyin})
+                return session_player
+            logger.warn(body="Session player insert didn't write a row", resource=_RESOURCE, attributes={"sessionId": session_id, "playerId": player_id, "rowCount": result.rowcount})
+            return None
+
+    except Exception as exception:
+        logger.error(body="Failed to save session player", resource=_RESOURCE, attributes={"sessionId": session_id, "playerId": player_id}, exception=exception)
+        raise
