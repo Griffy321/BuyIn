@@ -208,7 +208,6 @@ def save_session(session: Session) -> Session | None:
         raise
 
 
-
 def save_session_player(session_player: SessionPlayer) -> SessionPlayer | None:
     """
     Writes the session player object built by the endpoint to the DB.
@@ -239,4 +238,81 @@ def save_session_player(session_player: SessionPlayer) -> SessionPlayer | None:
 
     except Exception as exception:
         logger.error(body="Failed to save session player", resource=_RESOURCE, attributes={"sessionId": session_player.session_id, "playerId": session_player.player_id}, exception=exception)
+        raise
+
+
+def end_session(session: Session) -> Session | None:
+    """
+    Marks the session as ended in the DB, using the ended_at set on the object by session.settle_session(...).
+    Returns the session object, or None if it hasn't been settled in the call.
+    """
+    if session.ended_at is None:
+        logger.warn(body="Tried to end a session that hasn't been settled", resource=_RESOURCE, attributes={"sessionId": session.session_id})
+        return None
+
+    try:
+        with closing(create_connection(DB_NAME)) as connection:
+            result = connection.execute(
+                f"""
+                update {SESSION_TABLE_NAME}
+                set
+                    IsSettled = 1,
+                    EndedAt = :EndedAt
+                where
+                    1 = 1
+                    and IsSettled = 0
+                    and SessionId = :SessionId
+                """,
+                {"SessionId": session.session_id, "EndedAt": session.ended_at.isoformat()}
+                )
+
+            if result.rowcount == 1:
+                logger.info(body="Session ended", resource=_RESOURCE, attributes={"sessionId": session.session_id})
+                return session
+            logger.warn(body="No active session to end", resource=_RESOURCE, attributes={"sessionId": session.session_id, "rowCount": result.rowcount})
+            return None
+
+    except Exception as exception:
+        logger.error(body="Failed to end session", resource=_RESOURCE, attributes={"sessionId": session.session_id}, exception=exception)
+        raise
+
+
+def end_session_player(session_player: SessionPlayer) -> SessionPlayer | None:
+    """
+    Marks the session player as cashed out in the DB, using the cash_out and left_at set on the object by session_player.set_cashed_out(...).
+    Returns the session player object, or None if they haven't cashed out in this call.
+    """
+    if session_player.left_at is None:
+        logger.warn(body="Tried to end a session player who hasn't cashed out", resource=_RESOURCE, attributes={"sessionPlayerId": session_player.session_player_id})
+        return None
+
+    try:
+        with closing(create_connection(DB_NAME)) as connection:
+            result = connection.execute(
+                f"""
+                update {SESSION_PLAYER_TABLE_NAME}
+                set
+                    IsSettled = 1,
+                    CashOut = :CashOut,
+                    LeftAt = :LeftAt
+                where
+                    1 = 1
+                    and IsSettled = 0
+                    and SessionPlayerId = :SessionPlayerId
+                """,
+                {
+                    "SessionPlayerId": session_player.session_player_id,
+                    "CashOut": session_player.cash_out,
+                    "LeftAt": session_player.left_at.isoformat(),
+                }
+                )
+
+            if result.rowcount == 1:
+                logger.info(body="Session player ended", resource=_RESOURCE, attributes={"sessionPlayerId": session_player.session_player_id, "sessionId": session_player.session_id, "cashOut": session_player.cash_out})
+                return session_player
+            logger.warn(body="No active session player to end", resource=_RESOURCE, attributes={"sessionPlayerId": session_player.session_player_id, "rowCount": result.rowcount})
+            return None
+
+    except Exception as exception:
+        logger.error(body="Failed to end session player", resource=_RESOURCE, attributes={"sessionPlayerId": session_player.session_player_id}, exception=exception)
         raise
