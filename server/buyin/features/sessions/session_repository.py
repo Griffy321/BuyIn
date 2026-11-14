@@ -4,7 +4,7 @@ from buyin.data.config import create_connection
 from buyin.tools import logger
 from buyin.features.sessions.session import Session
 from buyin.features.sessions.session_player import SessionPlayer
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 _RESOURCE = "SessionData"
@@ -182,14 +182,12 @@ def player_currently_in_session(player_id: str) -> bool:
         raise
 
 
-def make_session(player_id: str) -> Session | None: # make the endpoint build the object then this will take the session object and do the sql
+def save_session(session: Session) -> Session | None:
     """
-    Makes the session object and writes it to the DB.
+    Writes the session object built by the endpoint to the DB.
     Returns the session object.
     """
     try:
-        session = Session(host_player_id=player_id)
-        session.initialized_at = datetime.now(timezone.utc)
         with closing(create_connection(DB_NAME)) as connection:
             result = connection.execute(
                 f"""
@@ -206,19 +204,17 @@ def make_session(player_id: str) -> Session | None: # make the endpoint build th
             return None
 
     except Exception as exception:
-        logger.error(body="Failed to save session", resource=_RESOURCE, attributes={"hostPlayerId": player_id}, exception=exception)
+        logger.error(body="Failed to save session", resource=_RESOURCE, attributes={"sessionId": session.session_id, "hostPlayerId": session.host_player_id}, exception=exception)
         raise
 
 
 
-def make_session_player(session_id: str, player_id: str, buyin: int) -> SessionPlayer | None:
+def save_session_player(session_player: SessionPlayer) -> SessionPlayer | None:
     """
-    Makes the session player object and writes it to the DB.
+    Writes the session player object built by the endpoint to the DB.
     Returns the session player object.
     """
     try:
-        session_player = SessionPlayer(player_id=player_id, session_id=session_id, buyin=buyin)
-        session_player.set_joined_at()
         with closing(create_connection(DB_NAME)) as connection:
             # IsSettled defaults to 0, and Status, CashOut and LeftAt stay null until the player's status changes or they cash out
             result = connection.execute(
@@ -236,11 +232,11 @@ def make_session_player(session_id: str, player_id: str, buyin: int) -> SessionP
                 )
 
             if result.rowcount == 1:
-                logger.info(body="Session player saved", resource=_RESOURCE, attributes={"sessionPlayerId": session_player.session_player_id, "sessionId": session_id, "playerId": player_id, "buyin": buyin})
+                logger.info(body="Session player saved", resource=_RESOURCE, attributes={"sessionPlayerId": session_player.session_player_id, "sessionId": session_player.session_id, "playerId": session_player.player_id, "buyin": session_player.buyin})
                 return session_player
-            logger.warn(body="Session player insert didn't write a row", resource=_RESOURCE, attributes={"sessionId": session_id, "playerId": player_id, "rowCount": result.rowcount})
+            logger.warn(body="Session player insert didn't write a row", resource=_RESOURCE, attributes={"sessionId": session_player.session_id, "playerId": session_player.player_id, "rowCount": result.rowcount})
             return None
 
     except Exception as exception:
-        logger.error(body="Failed to save session player", resource=_RESOURCE, attributes={"sessionId": session_id, "playerId": player_id}, exception=exception)
+        logger.error(body="Failed to save session player", resource=_RESOURCE, attributes={"sessionId": session_player.session_id, "playerId": session_player.player_id}, exception=exception)
         raise
