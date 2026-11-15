@@ -6,7 +6,6 @@ from buyin.api.responses import problem
 from buyin.data.write import write_record
 from buyin.api.requests import CreatePlayerRequest
 
-ENDPOINT = "/players"
 
 router = APIRouter()
 

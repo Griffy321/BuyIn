@@ -11,15 +11,17 @@ _RESOURCE = "Session"
 class Session:
     """The object that all the players join to play a game"""
 
-    def __init__(self, session_id: str | None = None):
+    def __init__(self, host_player_id: str, session_id: str | None = None):
         if is_blank(session_id):
             self.session_id: str = generate_secure_uid()
         else:
             self.session_id = session_id
+        self.host_player_id: str = host_player_id
         self.host_player: SessionPlayer | None = None
         self.session_players: list[SessionPlayer] = []
         self.cash_in_play: int = 0
         self.initialized_at: datetime = datetime.now(timezone.utc)
+        self.is_settled: bool = False
         self.ended_at: datetime | None = None
         logger.info(body="Session created", resource=_RESOURCE, attributes={"sessionId": self.session_id})
 
@@ -35,9 +37,14 @@ class Session:
         if self.host_player is not None:
             logger.warn(body="Session already has a host", resource=_RESOURCE, attributes={"sessionId": self.session_id, "playerId": player.player_id})
             return False
+        if self.host_player_id is not None and self.host_player_id != player.player_id:  # the session was made for a different host
+            logger.warn(body="Player is not this session's host", resource=_RESOURCE, attributes={"sessionId": self.session_id, "hostPlayerId": self.host_player_id, "playerId": player.player_id})
+            return False
         added = self.add_player(player)
         if added:
             self.host_player = player
+            if self.host_player_id is None:
+                self.host_player_id = player.player_id
             logger.info(body="Host added to session", resource=_RESOURCE, attributes={"sessionId": self.session_id, "playerId": player.player_id})
         return added
 
@@ -51,7 +58,6 @@ class Session:
             return False
         self.session_players.append(player)
         self.cash_in_play += player.buyin
-        player.set_joined_at()
         logger.info(body="Player joined session", resource=_RESOURCE, attributes={"sessionId": self.session_id, "playerId": player.player_id, "buyin": player.buyin})
         return True
 
@@ -84,5 +90,6 @@ class Session:
         for player_id, cashout in player_cashouts.items():
             self.remove_player(player_id, cashout)
         self.ended_at = datetime.now(timezone.utc)
+        self.is_settled = True
         logger.info(body="Session settled", resource=_RESOURCE, attributes={"sessionId": self.session_id, "totalCashout": total_cashout})
         return True
