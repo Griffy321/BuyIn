@@ -15,9 +15,11 @@ class CreatePlayerRequest(CamelModel):
 
 class CreateSessionRequest(CamelModel):
     player_id: str
+    buyin: int = Field(gt=0)
 
 
 class CreateSessionPlayerRequest(CamelModel):
+    session_id: str
     player_id: str
     buyin: int = Field(gt=0)
 

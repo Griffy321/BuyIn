@@ -58,7 +58,6 @@ class Session:
             return False
         self.session_players.append(player)
         self.cash_in_play += player.buyin
-        player.set_joined_at()
         logger.info(body="Player joined session", resource=_RESOURCE, attributes={"sessionId": self.session_id, "playerId": player.player_id, "buyin": player.buyin})
         return True
 

@@ -19,18 +19,11 @@ class SessionPlayer:
         self.player_id: str = player_id
         self.chips: dict[str, list[int]] = {}
         self.buyin: int = buyin
-        self.joined_at: datetime | None = None
+        self.joined_at: datetime = datetime.now(timezone.utc)
         self.status: str | None = None # want to try and show this in the top corner of the app like an "On Air" sign but with the users game status
         self.is_settled: bool = False
         self.cash_out: int | None = None
         self.left_at: datetime | None = None
-
-
-    def set_joined_at(self) -> bool:
-        if self.joined_at is None:
-            self.joined_at = datetime.now(timezone.utc)
-            return True
-        return False
 
 
     def update_status(self):
