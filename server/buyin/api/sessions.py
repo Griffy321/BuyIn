@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post("/sessions") # endpoint to make a session
-async def make_new_session(body: CreateSessionRequest):
+async def make_session(body: CreateSessionRequest):
     """
     Makes the new session and saves it to the db.
     Returns the session id.
@@ -47,5 +47,24 @@ async def make_new_session(body: CreateSessionRequest):
 
 
 @router.post("/sessions/{session_id}/players")
-async def join_session(body: CreateSessionPlayerRequest):
-    pass
+async def make_session_player(session_id: str, body: CreateSessionPlayerRequest):
+    try:
+        exists = player_exists(body.player_id)
+        if not exists:
+            return problem(status=404, detail=f"No player with ID {body.player_id}")
+        in_session = player_currently_in_session(body.player_id)
+        if in_session:
+            return problem(status=409, detail=f"Player {body.player_id} is already in an active session")
+        session_is_active = session_exists(session_id)
+        if not session_is_active:
+            return problem(status=404, detail=f"No active session with ID {session_id}")
+
+        session_player = SessionPlayer(player_id=body.player_id, session_id=session_id, buyin=body.buyin)
+
+        saved_session_player = save_session_player(session_player)
+        if saved_session_player is not None:
+            return {"sessionId": session_id, "sessionPlayerId": saved_session_player.session_player_id}
+        return problem(status=500, detail="Couldn't save the session player")
+
+    except Exception:
+        return problem(status=500, detail="Couldn't save the session player")
